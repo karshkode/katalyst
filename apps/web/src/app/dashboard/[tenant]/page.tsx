@@ -7,7 +7,7 @@ type Overview = {
     service: string;
     status: string;
     baseUrl?: string | null;
-    health?: { status: string; detail?: string };
+    health?: { status: string; detail?: string; mode?: string };
   }>;
   campaigns: Array<{ id: string; name: string; status: string; links: unknown[] }>;
 };
@@ -77,6 +77,7 @@ export default async function OverviewPage({
           <thead>
             <tr>
               <th>Service</th>
+              <th>Mode</th>
               <th>Status</th>
               <th>Endpoint</th>
             </tr>
@@ -85,6 +86,18 @@ export default async function OverviewPage({
             {data.services.map((s) => (
               <tr key={s.service}>
                 <td>{s.service}</td>
+                <td>
+                  <span
+                    className="status-pill"
+                    style={
+                      s.health?.mode === "live"
+                        ? { background: "rgba(51,153,153,0.18)", color: "var(--katalyst-primary)" }
+                        : { background: "rgba(90,97,107,0.12)", color: "var(--katalyst-muted)" }
+                    }
+                  >
+                    {s.health?.mode ?? "mock"}
+                  </span>
+                </td>
                 <td>
                   <span className="status-pill">{s.health?.status ?? s.status}</span>
                 </td>

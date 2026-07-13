@@ -23,7 +23,27 @@ Creating a campaign in the dashboard calls the bus and persists `CampaignLink` r
 
 ## Live mode
 
-Set `INTEGRATION_MODE=live`. Adapters currently passthrough to mock until suite containers and credentials are configured per tenant.
+Two ways to go live:
+
+- `INTEGRATION_MODE=live` — every service uses its live adapter.
+- `LIVE_SERVICES=nextcloud,keycloak,jitsi,wordpress` — opt specific services
+  into live while the rest stay mock (recommended for local testing).
+
+Live adapters implemented today (`packages/integrations/src/adapters/`):
+
+| Service | Action on campaign create | Verify |
+|---------|---------------------------|--------|
+| WordPress | `POST /wp-json/wp/v2/pages` (page per campaign) | `GET pages/:id` |
+| Nextcloud | WebDAV `MKCOL /Campaigns/<slug>` | `PROPFIND` folder |
+| Keycloak | Admin API create group `campaign-<slug>` | group search |
+| Jitsi | Compose real room URL on `JITSI_BASE_URL` | URL match |
+
+Mobilizon, Sendy, and OpenProject remain mock (heavier / licensed) and fall back
+to the mock adapter automatically if no live adapter or creds are present.
+
+See [TESTING.md](TESTING.md) for the full local test flow. A campaign can be
+re-checked any time via `POST /tenants/:slug/campaigns/:id/verify`, which also
+powers the dashboard **Verify links** button.
 
 ## Signal
 

@@ -38,6 +38,7 @@ export class AppController {
       ok: true,
       service: "katalyst-api",
       mode: this.integrations.env.INTEGRATION_MODE,
+      liveServices: this.integrations.bus.liveServices,
     };
   }
 
@@ -274,6 +275,58 @@ export class AppController {
       where: { id: campaign.id },
       include: { links: true },
     });
+  }
+
+  @Post("tenants/:slug/campaigns/:campaignId/verify")
+  async verifyCampaign(
+    @Param("slug") slug: string,
+    @Param("campaignId") campaignId: string,
+  ) {
+    const tenant = await this.requireTenant(slug);
+    const campaign = await this.prisma.campaign.findFirst({
+      where: { id: campaignId, tenantId: tenant.id },
+      include: { links: true },
+    });
+    if (!campaign) throw new NotFoundException("Campaign not found");
+
+    const results = await this.integrations.bus.verifyCampaign(
+      { id: tenant.id, slug: tenant.slug, name: tenant.name },
+      {
+        id: campaign.id,
+        slug: campaign.slug,
+        name: campaign.name,
+        description: campaign.description,
+        startsAt: campaign.startsAt,
+        endsAt: campaign.endsAt,
+      },
+      campaign.links.map((l) => ({
+        service: l.service,
+        externalId: l.externalId,
+        url: l.url ?? "",
+        status: "linked" as const,
+        meta: (l.meta ?? {}) as Record<string, unknown>,
+      })),
+    );
+
+    for (const r of results) {
+      await this.prisma.campaignLink.updateMany({
+        where: { campaignId: campaign.id, service: r.service as ServiceName },
+        data: { status: r.ok ? LinkStatus.LINKED : LinkStatus.ERROR },
+      });
+    }
+
+    return {
+      campaign: campaign.name,
+      mode: this.integrations.env.INTEGRATION_MODE,
+      liveServices: this.integrations.bus.liveServices,
+      results: results.map((r) => ({
+        service: r.service,
+        mode: this.integrations.bus.modeOf(r.service as ServiceName),
+        ok: r.ok,
+        detail: r.detail,
+        checkedUrl: r.checkedUrl,
+      })),
+    };
   }
 
   @Get("tenants/:slug/contacts")

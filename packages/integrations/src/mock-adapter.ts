@@ -5,16 +5,12 @@ import type {
   ServiceAdapter,
   ServiceHandle,
   TenantRef,
+  VerifyResult,
 } from "./types";
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+import { slugify } from "./types";
 
 export class MockAdapter implements ServiceAdapter {
+  readonly mode = "mock" as const;
   constructor(public readonly service: ServiceName) {}
 
   async provision(tenant: TenantRef): Promise<ServiceHandle> {
@@ -57,5 +53,18 @@ export class MockAdapter implements ServiceAdapter {
 
   async health(_tenant: TenantRef) {
     return { status: "healthy" as const, detail: "mock adapter online" };
+  }
+
+  async verify(
+    _tenant: TenantRef,
+    _campaign: CampaignRef,
+    link: RemoteLink,
+  ): Promise<VerifyResult> {
+    return {
+      service: this.service,
+      ok: true,
+      detail: "mock link assumed valid",
+      checkedUrl: link.url,
+    };
   }
 }

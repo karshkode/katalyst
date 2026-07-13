@@ -57,11 +57,26 @@ Open:
 
 See [docs/PRICING.md](docs/PRICING.md).
 
+## Live service testing
+
+Bring up real WordPress, Nextcloud, and Keycloak and prove the campaign fan-out
+creates real resources:
+
+```bash
+docker compose -f docker/compose.live.yml up -d
+# then run the API with:
+#   LIVE_SERVICES=nextcloud,keycloak,jitsi,wordpress
+```
+
+Create a campaign and click **Verify links** in the dashboard (or
+`POST /tenants/:slug/campaigns/:id/verify`). See [docs/TESTING.md](docs/TESTING.md).
+
 ## Docs
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Local development](docs/LOCAL_DEV.md)
 - [Integrations](docs/INTEGRATIONS.md)
+- [Testing the campaign feature](docs/TESTING.md)
 - [Pricing](docs/PRICING.md)
 
 ## Edge (Cloudflare-free)
