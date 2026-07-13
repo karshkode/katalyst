@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanId {
+  S
+  M
+  L
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum LinkStatus {
+  PENDING
+  LINKED
+  ERROR
+  DISABLED
+}
+
+enum ServiceName {
+  wordpress
+  mobilizon
+  sendy
+  openproject
+  nextcloud
+  jitsi
+  keycloak
+}
+
+enum DomainStatus {
+  PENDING
+  ACTIVE
+  ERROR
+}
+
+model Tenant {
+  id           String         @id @default(cuid())
+  name         String
+  slug         String         @unique
+  plan         PlanId         @default(S)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  users        User[]
+  campaigns    Campaign[]
+  contacts     Contact[]
+  tags         Tag[]
+  shortUrls    ShortUrl[]
+  qrAssets     QrAsset[]
+  domains      Domain[]
+  signalBots   SignalBot[]
+  serviceLinks TenantService[]
+  invoices     Invoice[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String
+  email     String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+}
+
+model TenantService {
+  id         String      @id @default(cuid())
+  tenantId   String
+  service    ServiceName
+  status     String      @default("healthy")
+  baseUrl    String?
+  externalId String?
+  meta       Json?
+  updatedAt  DateTime    @updatedAt
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, service])
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  status      CampaignStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links       CampaignLink[]
+  activities  Activity[]
+
+  @@unique([tenantId, slug])
+}
+
+model CampaignLink {
+  id         String      @id @default(cuid())
+  campaignId String
+  service    ServiceName
+  externalId String
+  url        String?
+  status     LinkStatus  @default(PENDING)
+  meta       Json?
+  updatedAt  DateTime    @updatedAt
+  campaign   Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, service])
+}
+
+model Contact {
+  id        String    @id @default(cuid())
+  tenantId  String
+  email     String?
+  phone     String?
+  firstName String?
+  lastName  String?
+  city      String?
+  state     String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tags      ContactTag[]
+  activities Activity[]
+
+  @@index([tenantId, email])
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  tenantId String
+  name     String
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contacts ContactTag[]
+
+  @@unique([tenantId, name])
+}
+
+model ContactTag {
+  contactId String
+  tagId     String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, tagId])
+}
+
+model Activity {
+  id         String   @id @default(cuid())
+  contactId  String?
+  campaignId String?
+  type       String
+  summary    String
+  createdAt  DateTime @default(now())
+  contact    Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+}
+
+model ShortUrl {
+  id        String   @id @default(cuid())
+  tenantId  String
+  code      String   @unique
+  targetUrl String
+  clicks    Int      @default(0)
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model QrAsset {
+  id        String   @id @default(cuid())
+  tenantId  String
+  label     String
+  targetUrl String
+  svg       String
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Domain {
+  id        String       @id @default(cuid())
+  tenantId  String
+  hostname  String
+  status    DomainStatus @default(PENDING)
+  tlsStatus String       @default("pending")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([hostname])
+}
+
+model SignalBot {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  phone     String?
+  status    String   @default("offline")
+  groups    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  tenantId  String
+  amount    Int
+  currency  String   @default("usd")
+  status    String   @default("paid")
+  periodLabel String
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}

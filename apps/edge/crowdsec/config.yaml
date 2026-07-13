@@ -1,0 +1,10 @@
+# Minimal CrowdSec config stub for local profiles.
+# Production: enroll with CrowdSec console or self-hosted LAPI.
+common:
+  daemonize: false
+  log_media: stdout
+api:
+  server:
+    listen_uri: 0.0.0.0:8080
+crowdsec_service:
+  acquisition_path: /etc/crowdsec/acquis.yaml

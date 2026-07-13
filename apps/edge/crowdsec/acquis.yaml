@@ -1,0 +1,5 @@
+# CrowdSec acquis for Katalyst edge
+filenames:
+  - /var/log/caddy/access.log
+labels:
+  type: caddy

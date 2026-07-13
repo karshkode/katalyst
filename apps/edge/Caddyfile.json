@@ -1,0 +1,48 @@
+{
+	"apps": {
+		"http": {
+			"servers": {
+				"srv0": {
+					"listen": [":80"],
+					"routes": [
+						{
+							"match": [{ "host": ["katalyst.localhost", "localhost"] }],
+							"handle": [
+								{
+									"handler": "reverse_proxy",
+									"upstreams": [{ "dial": "web:3000" }]
+								}
+							]
+						},
+						{
+							"match": [{ "host": ["api.katalyst.localhost"] }],
+							"handle": [
+								{
+									"handler": "reverse_proxy",
+									"upstreams": [{ "dial": "api:4000" }]
+								}
+							]
+						},
+						{
+							"match": [{ "host": ["auth.katalyst.localhost"] }],
+							"handle": [
+								{
+									"handler": "reverse_proxy",
+									"upstreams": [{ "dial": "keycloak:8080" }]
+								}
+							]
+						},
+						{
+							"handle": [
+								{
+									"handler": "reverse_proxy",
+									"upstreams": [{ "dial": "web:3000" }]
+								}
+							]
+						}
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,113 @@
+services:
+  postgres:
+    profiles: ["core", "suite", "full"]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: katalyst
+      POSTGRES_PASSWORD: katalyst
+      POSTGRES_DB: katalyst
+    ports:
+      - "5432:5432"
+    volumes:
+      - katalyst_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U katalyst"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    profiles: ["core", "suite", "full"]
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  keycloak:
+    profiles: ["core", "suite", "full"]
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--http-port=8080"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8080:8080"
+
+  api:
+    profiles: ["core", "suite", "full"]
+    build:
+      context: ..
+      dockerfile: docker/services/api.Dockerfile
+    environment:
+      DATABASE_URL: postgresql://katalyst:katalyst@postgres:5432/katalyst?schema=public
+      REDIS_URL: redis://redis:6379
+      INTEGRATION_MODE: mock
+      WEB_ORIGIN: http://localhost:3000
+      PORT: "4000"
+      SHORT_URL_BASE: http://localhost:4000/r
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  web:
+    profiles: ["core", "suite", "full"]
+    build:
+      context: ..
+      dockerfile: docker/services/web.Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  caddy:
+    profiles: ["core", "suite", "full"]
+    image: caddy:2.8-alpine
+    ports:
+      - "8088:80"
+    volumes:
+      - ../apps/edge/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - web
+      - api
+
+  crowdsec:
+    profiles: ["edge", "full"]
+    image: crowdsecurity/crowdsec:v1.6.4
+    volumes:
+      - ../apps/edge/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+    environment:
+      COLLECTIONS: "crowdsecurity/caddy"
+    depends_on:
+      - caddy
+
+  anubis:
+    profiles: ["edge", "full"]
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      TARGET: http://caddy:80
+      BIND: ":8081"
+      DIFFICULTY: "4"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - caddy
+
+  signal-cli:
+    profiles: ["suite", "full"]
+    image: bbernhard/signal-cli-rest-api:latest
+    environment:
+      MODE: json-rpc
+    ports:
+      - "8090:8080"
+    volumes:
+      - katalyst_signal:/home/.local/share/signal-cli
+
+volumes:
+  katalyst_pg:
+  katalyst_signal:
