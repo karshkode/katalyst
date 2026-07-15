@@ -1,0 +1,108 @@
+:root {
+  --katalyst-primary: #04243e;
+  --katalyst-secondary: #339999;
+  --katalyst-success: #3e8d63;
+  --katalyst-danger: #bc3f41;
+  --katalyst-warning: #945707;
+  --katalyst-ink: #13101c;
+  --katalyst-light: #f8f9fa;
+  --katalyst-muted: #5a616b;
+  --katalyst-surface: #ffffff;
+  --katalyst-surface-soft: #eef6f6;
+  --katalyst-border: rgba(4, 36, 62, 0.12);
+  --katalyst-radius: 14px;
+  --katalyst-shadow: 0 18px 50px rgba(4, 36, 62, 0.12);
+  --katalyst-font-display: "Amaranth", "Segoe UI", sans-serif;
+  --katalyst-font-body: "Nobile", "Segoe UI", Helvetica, Arial, sans-serif;
+  --katalyst-gradient: radial-gradient(
+      1200px 600px at 10% -10%,
+      rgba(51, 153, 153, 0.28),
+      transparent 55%
+    ),
+    radial-gradient(900px 500px at 90% 0%, rgba(4, 36, 62, 0.35), transparent 50%),
+    linear-gradient(160deg, #04243e 0%, #0a3a55 42%, #136b74 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  color: var(--katalyst-ink);
+  font-family: var(--katalyst-font-body);
+  background: var(--katalyst-light);
+}
+
+a {
+  color: var(--katalyst-secondary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.85rem 1.35rem;
+  font-weight: 700;
+  font-family: var(--katalyst-font-body);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.k-btn:hover {
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.k-btn-primary {
+  background: var(--katalyst-secondary);
+  color: white;
+  box-shadow: 0 10px 30px rgba(51, 153, 153, 0.35);
+}
+
+.k-btn-primary:hover {
+  background: #2c8585;
+}
+
+.k-btn-ghost {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.k-btn-dark {
+  background: var(--katalyst-primary);
+  color: white;
+}
+
+.k-card {
+  background: var(--katalyst-surface);
+  border: 1px solid var(--katalyst-border);
+  border-radius: var(--katalyst-radius);
+  box-shadow: var(--katalyst-shadow);
+  padding: 1.25rem;
+}
+
+.k-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(51, 153, 153, 0.14);
+  color: var(--katalyst-primary);
+}

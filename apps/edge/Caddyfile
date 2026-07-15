@@ -1,0 +1,26 @@
+# Katalyst local edge (Caddyfile format)
+# For production, swap to on-demand TLS and per-tenant host maps.
+
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	# Anubis / CrowdSec sit in front in fuller profiles; see crowdsec/ and anubis/
+	encode gzip
+
+	@api host api.katalyst.localhost
+	handle @api {
+		reverse_proxy api:4000
+	}
+
+	@auth host auth.katalyst.localhost
+	handle @auth {
+		reverse_proxy keycloak:8080
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

@@ -1,0 +1,19 @@
+{
+  "name": "katalyst",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "db:generate": "pnpm --filter @katalyst/db generate",
+    "db:migrate": "pnpm --filter @katalyst/db migrate:dev",
+    "db:seed": "pnpm --filter @katalyst/db seed",
+    "docker:core": "docker compose -f docker/compose.yml --profile core up --build",
+    "docker:down": "docker compose -f docker/compose.yml --profile core down"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}
